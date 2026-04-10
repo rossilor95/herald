@@ -6,7 +6,7 @@
 
 **Architecture:** Two-module KMP Gradle project. `:shared` contains core logic (HTTP engine, variable resolution, storage via SQLDelight, domain model). `:desktop` contains Compose Multiplatform UI. Desktop calls Shared via suspend functions and StateFlow.
 
-**Tech Stack:** Kotlin 2.3.20, Gradle 9.3, Compose Multiplatform 1.10.3, Ktor Client 3.4.2 (CIO engine), SQLDelight 2.3.2, kotlinx-serialization, kotlinx-coroutines
+**Tech Stack:** Kotlin 2.3.20, Gradle 9.4.1, Compose Multiplatform 1.10.3, Ktor Client 3.4.2 (CIO engine), SQLDelight 2.3.2, kotlinx-serialization, kotlinx-coroutines
 
 ## Version Catalog
 
@@ -134,7 +134,7 @@ shared/
 desktop/
   build.gradle.kts
   src/
-    jvmMain/kotlin/dev/herald/desktop/
+    desktopMain/kotlin/dev/herald/desktop/
       Main.kt
       App.kt
       theme/
@@ -167,7 +167,7 @@ desktop/
         common/
           PromptDialog.kt
           ContextMenu.kt
-    jvmMain/resources/fonts/
+    desktopMain/resources/fonts/
       JetBrainsMono-Regular.ttf
       JetBrainsMono-Bold.ttf
       DMSans-Regular.ttf
@@ -188,13 +188,13 @@ desktop/
 - Create: `shared/build.gradle.kts`
 - Create: `desktop/build.gradle.kts`
 - Create: `shared/src/commonMain/kotlin/dev/herald/core/model/HttpMethod.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/Main.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/Main.kt`
 
 - [ ] **Step 1: Initialize Gradle wrapper**
 
 Run:
 ```bash
-gradle wrapper --gradle-version 9.3
+gradle wrapper --gradle-version 9.4.1
 ```
 
 - [ ] **Step 2: Create `gradle/libs.versions.toml`**
@@ -219,7 +219,7 @@ pluginManagement {
     }
 }
 
-dependencyResolution {
+dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
@@ -409,14 +409,15 @@ enum class HttpMethod {
 
     companion object {
         fun fromString(value: String): HttpMethod =
-            entries.first { it.name.equals(value, ignoreCase = true) }
+            entries.firstOrNull { it.name.equals(value, ignoreCase = true) }
+                ?: throw IllegalArgumentException("Unknown HTTP method: $value")
     }
 }
 ```
 
 - [ ] **Step 11: Create desktop entry point**
 
-Create `desktop/src/jvmMain/kotlin/dev/herald/desktop/Main.kt`:
+Create `desktop/src/desktopMain/kotlin/dev/herald/desktop/Main.kt`:
 
 ```kotlin
 package dev.herald.desktop
@@ -2493,14 +2494,14 @@ git commit -m "fix: resolve shared module test issues"
 ### Task 8: Theme, Colors, Typography (Track B)
 
 **Files:**
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/theme/Colors.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/theme/Typography.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/theme/Theme.kt`
-- Download: font files to `desktop/src/jvmMain/resources/fonts/`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/theme/Colors.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/theme/Typography.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/theme/Theme.kt`
+- Download: font files to `desktop/src/desktopMain/resources/fonts/`
 
 - [ ] **Step 1: Download fonts**
 
-Download JetBrains Mono (Regular, Bold) and DM Sans (Regular, Medium, Bold) TTF files. Place them in `desktop/src/jvmMain/resources/fonts/`. Include the OFL license file as `OFL.txt`.
+Download JetBrains Mono (Regular, Bold) and DM Sans (Regular, Medium, Bold) TTF files. Place them in `desktop/src/desktopMain/resources/fonts/`. Include the OFL license file as `OFL.txt`.
 
 - [ ] **Step 2: Create `Colors.kt`**
 
@@ -2692,7 +2693,7 @@ fun HeraldTheme(content: @Composable () -> Unit) {
 
 - [ ] **Step 5: Update `Main.kt` to use the theme**
 
-Replace `desktop/src/jvmMain/kotlin/dev/herald/desktop/Main.kt`:
+Replace `desktop/src/desktopMain/kotlin/dev/herald/desktop/Main.kt`:
 
 ```kotlin
 package dev.herald.desktop
@@ -2739,7 +2740,7 @@ Expected: Window opens with dark near-black background and "Herald" text in JetB
 - [ ] **Step 7: Commit**
 
 ```bash
-git add desktop/src/jvmMain/
+git add desktop/src/desktopMain/
 git commit -m "feat: add Herald dark theme with custom colors and typography"
 ```
 
@@ -2748,8 +2749,8 @@ git commit -m "feat: add Herald dark theme with custom colors and typography"
 ### Task 9: App State Management (Track B)
 
 **Files:**
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/state/TabState.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/state/AppState.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/state/TabState.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/state/AppState.kt`
 
 - [ ] **Step 1: Create `TabState`**
 
@@ -2883,7 +2884,7 @@ Expected: BUILD SUCCESSFUL.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add desktop/src/jvmMain/kotlin/dev/herald/desktop/state/
+git add desktop/src/desktopMain/kotlin/dev/herald/desktop/state/
 git commit -m "feat: add app and tab state management"
 ```
 
@@ -2892,11 +2893,11 @@ git commit -m "feat: add app and tab state management"
 ### Task 10: Sidebar Shell (Track B)
 
 **Files:**
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/sidebar/Sidebar.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/sidebar/CollectionTree.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/sidebar/HistoryList.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/sidebar/EnvironmentSelector.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/App.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/sidebar/Sidebar.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/sidebar/CollectionTree.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/sidebar/HistoryList.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/sidebar/EnvironmentSelector.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/App.kt`
 
 This task creates the sidebar layout with hardcoded stub data. Integration with real data happens in Task 13.
 
@@ -3449,7 +3450,7 @@ Expected: Window with dark sidebar on the left showing "My API" collection with 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add desktop/src/jvmMain/kotlin/dev/herald/desktop/
+git add desktop/src/desktopMain/kotlin/dev/herald/desktop/
 git commit -m "feat: add sidebar with collection tree, history list, and environment selector"
 ```
 
@@ -3458,15 +3459,15 @@ git commit -m "feat: add sidebar with collection tree, history list, and environ
 ### Task 11: Tab Bar, Request Editor, Response Viewer (Track B)
 
 **Files:**
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/tabs/TabBar.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/request/MethodDropdown.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/request/UrlBar.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/request/KeyValueEditor.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/request/BodyEditor.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/request/RequestEditor.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/response/SyntaxHighlighter.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/response/StatusBar.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/response/ResponseViewer.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/tabs/TabBar.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/request/MethodDropdown.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/request/UrlBar.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/request/KeyValueEditor.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/request/BodyEditor.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/request/RequestEditor.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/response/SyntaxHighlighter.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/response/StatusBar.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/response/ResponseViewer.kt`
 
 - [ ] **Step 1: Create `TabBar`**
 
@@ -4295,7 +4296,7 @@ Expected: BUILD SUCCESSFUL.
 - [ ] **Step 11: Commit**
 
 ```bash
-git add desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/
+git add desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/
 git commit -m "feat: add tab bar, request editor, and response viewer components"
 ```
 
@@ -4304,8 +4305,8 @@ git commit -m "feat: add tab bar, request editor, and response viewer components
 ### Task 12: Wire Stub App Layout (Track B)
 
 **Files:**
-- Modify: `desktop/src/jvmMain/kotlin/dev/herald/desktop/App.kt`
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/common/PromptDialog.kt`
+- Modify: `desktop/src/desktopMain/kotlin/dev/herald/desktop/App.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/common/PromptDialog.kt`
 
 This task connects the tab bar, request editor, and response viewer into the main `App` composable using stub data. No real backend yet.
 
@@ -4351,7 +4352,7 @@ fun ConfirmDialog(
 
 - [ ] **Step 2: Update `App.kt` with full layout**
 
-Replace `desktop/src/jvmMain/kotlin/dev/herald/desktop/App.kt` with:
+Replace `desktop/src/desktopMain/kotlin/dev/herald/desktop/App.kt` with:
 
 ```kotlin
 package dev.herald.desktop
@@ -4537,7 +4538,7 @@ Expected: Full layout visible. Sidebar on left. Click "+" to create a new tab. T
 - [ ] **Step 4: Commit**
 
 ```bash
-git add desktop/src/jvmMain/kotlin/dev/herald/desktop/
+git add desktop/src/desktopMain/kotlin/dev/herald/desktop/
 git commit -m "feat: wire complete app layout with tabs, request editor, and response viewer"
 ```
 
@@ -4548,9 +4549,9 @@ git commit -m "feat: wire complete app layout with tabs, request editor, and res
 ### Task 13: Wire Shared Module into Desktop (Integration)
 
 **Files:**
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/history/HistoryDetailView.kt`
-- Modify: `desktop/src/jvmMain/kotlin/dev/herald/desktop/App.kt`
-- Modify: `desktop/src/jvmMain/kotlin/dev/herald/desktop/Main.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/history/HistoryDetailView.kt`
+- Modify: `desktop/src/desktopMain/kotlin/dev/herald/desktop/App.kt`
+- Modify: `desktop/src/desktopMain/kotlin/dev/herald/desktop/Main.kt`
 
 This task replaces all stub data with real database-backed state and connects the Send button to the request executor.
 
@@ -4767,7 +4768,7 @@ Test the following flow:
 - [ ] **Step 5: Commit**
 
 ```bash
-git add desktop/src/jvmMain/kotlin/dev/herald/desktop/
+git add desktop/src/desktopMain/kotlin/dev/herald/desktop/
 git commit -m "feat: wire shared module into desktop with real database and HTTP execution"
 ```
 
@@ -4776,9 +4777,9 @@ git commit -m "feat: wire shared module into desktop with real database and HTTP
 ### Task 14: Context Menus for CRUD (Integration)
 
 **Files:**
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/common/ContextMenu.kt`
-- Modify: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/sidebar/CollectionTree.kt`
-- Modify: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/sidebar/Sidebar.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/common/ContextMenu.kt`
+- Modify: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/sidebar/CollectionTree.kt`
+- Modify: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/sidebar/Sidebar.kt`
 
 - [ ] **Step 1: Create `ContextMenu` helper**
 
@@ -4874,7 +4875,7 @@ Test: create/rename/delete collections, folders, and requests via right-click co
 - [ ] **Step 6: Commit**
 
 ```bash
-git add desktop/src/jvmMain/kotlin/dev/herald/desktop/
+git add desktop/src/desktopMain/kotlin/dev/herald/desktop/
 git commit -m "feat: add context menu CRUD for collections, folders, and requests"
 ```
 
@@ -4883,9 +4884,9 @@ git commit -m "feat: add context menu CRUD for collections, folders, and request
 ### Task 15: Environment and Variable Editor (Integration)
 
 **Files:**
-- Create: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/sidebar/EnvironmentEditor.kt`
-- Modify: `desktop/src/jvmMain/kotlin/dev/herald/desktop/ui/sidebar/EnvironmentSelector.kt`
-- Modify: `desktop/src/jvmMain/kotlin/dev/herald/desktop/App.kt`
+- Create: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/sidebar/EnvironmentEditor.kt`
+- Modify: `desktop/src/desktopMain/kotlin/dev/herald/desktop/ui/sidebar/EnvironmentSelector.kt`
+- Modify: `desktop/src/desktopMain/kotlin/dev/herald/desktop/App.kt`
 
 The spec requires users to create/edit/delete environments and their variables. The `EnvironmentSelector` only handles selection. This task adds editing.
 
@@ -5071,7 +5072,7 @@ Test: Click environment selector → "Manage Environments" → Create "dev" → 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add desktop/src/jvmMain/kotlin/dev/herald/desktop/
+git add desktop/src/desktopMain/kotlin/dev/herald/desktop/
 git commit -m "feat: add environment and variable editor dialog"
 ```
 

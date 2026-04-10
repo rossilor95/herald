@@ -11,7 +11,7 @@ Supersedes the previous Rust/Dioxus design spec (`2026-03-22-postman-clone-desig
 | Component | Choice |
 |---|---|
 | Language | Kotlin 2.3.20 |
-| Build system | Gradle 9.3 with Kotlin DSL, KMP plugin |
+| Build system | Gradle 9.4.1 with Kotlin DSL, KMP plugin |
 | UI framework | Compose Multiplatform (desktop) |
 | HTTP client | Ktor Client |
 | Storage | SQLDelight (JVM SQLite driver) |

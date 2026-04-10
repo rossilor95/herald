@@ -1,4 +1,8 @@
+# macOS
 .DS_Store
+
+# IDE
+.idea/
 
 # AI Tools
 .serena/
@@ -6,5 +10,6 @@
 # Gradle
 .gradle/
 build/
-*/build/
+
+# Local configuration
 local.properties

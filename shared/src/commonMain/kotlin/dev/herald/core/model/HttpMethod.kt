@@ -5,6 +5,7 @@ enum class HttpMethod {
 
     companion object {
         fun fromString(value: String): HttpMethod =
-            entries.first { it.name.equals(value, ignoreCase = true) }
+            entries.firstOrNull { it.name.equals(value, ignoreCase = true) }
+                ?: throw IllegalArgumentException("Unknown HTTP method: $value")
     }
 }

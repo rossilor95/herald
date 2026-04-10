@@ -10,8 +10,8 @@ Full design spec: `.claude/docs/superpowers/specs/2026-04-10-herald-kmp-design.m
 
 | Component | Choice |
 |---|---|
-| Language | Kotlin 2.1.x (upgrade to 2.3 when stable) |
-| Build system | Gradle 8.10 with Kotlin DSL, KMP plugin |
+| Language | Kotlin 2.3.20 |
+| Build system | Gradle 9.3 with Kotlin DSL, KMP plugin |
 | UI framework | Compose Multiplatform (desktop) |
 | HTTP client | Ktor Client (CIO engine) |
 | Storage | SQLDelight (JVM SQLite driver) |

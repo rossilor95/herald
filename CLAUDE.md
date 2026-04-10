@@ -4,4 +4,6 @@ Shared project context is in `AGENTS.md` (read by both Claude Code and GitHub Co
 
 ## Design Spec
 
-Full design spec: `.claude/docs/superpowers/specs/2026-03-22-postman-clone-design.md`
+Full design spec: `.claude/docs/superpowers/specs/2026-04-10-herald-kmp-design.md`
+
+Previous (superseded) Rust spec: `.claude/docs/superpowers/specs/2026-03-22-postman-clone-design.md`

@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS method (
+    name TEXT NOT NULL PRIMARY KEY
+);
+
+INSERT OR IGNORE INTO method (name) VALUES ('GET');
+INSERT OR IGNORE INTO method (name) VALUES ('POST');
+INSERT OR IGNORE INTO method (name) VALUES ('PUT');
+INSERT OR IGNORE INTO method (name) VALUES ('DELETE');
+INSERT OR IGNORE INTO method (name) VALUES ('PATCH');
+INSERT OR IGNORE INTO method (name) VALUES ('HEAD');
+INSERT OR IGNORE INTO method (name) VALUES ('OPTIONS');
+
+selectAllMethods:
+SELECT name FROM method ORDER BY name;

@@ -13,3 +13,6 @@ build/
 
 # Local configuration
 local.properties
+
+# Git worktrees
+.worktrees/

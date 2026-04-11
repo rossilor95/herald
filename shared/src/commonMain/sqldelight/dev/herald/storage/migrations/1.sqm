@@ -1,0 +1,68 @@
+CREATE TABLE IF NOT EXISTS collection (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS folder (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    collection_id INTEGER NOT NULL REFERENCES collection(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    seq INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS request (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    collection_id INTEGER NOT NULL REFERENCES collection(id) ON DELETE CASCADE,
+    folder_id INTEGER REFERENCES folder(id) ON DELETE SET NULL,
+    name TEXT NOT NULL,
+    method TEXT NOT NULL REFERENCES method(name),
+    url TEXT NOT NULL DEFAULT '',
+    headers TEXT NOT NULL DEFAULT '[]',
+    query_params TEXT NOT NULL DEFAULT '[]',
+    body_type TEXT,
+    body_content TEXT,
+    seq INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS environment (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS variable (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    environment_id INTEGER NOT NULL REFERENCES environment(id) ON DELETE CASCADE,
+    key TEXT NOT NULL,
+    value TEXT NOT NULL DEFAULT '',
+    enabled INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS history_entry (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    request_id INTEGER NOT NULL REFERENCES request(id) ON DELETE CASCADE,
+    method TEXT NOT NULL REFERENCES method(name),
+    resolved_url TEXT NOT NULL,
+    request_headers TEXT NOT NULL DEFAULT '[]',
+    request_body TEXT,
+    response_status INTEGER NOT NULL,
+    response_headers TEXT NOT NULL DEFAULT '[]',
+    response_body TEXT,
+    duration_ms INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+);
+
+INSERT OR IGNORE INTO method (name) VALUES ('GET');
+INSERT OR IGNORE INTO method (name) VALUES ('POST');
+INSERT OR IGNORE INTO method (name) VALUES ('PUT');
+INSERT OR IGNORE INTO method (name) VALUES ('DELETE');
+INSERT OR IGNORE INTO method (name) VALUES ('PATCH');
+INSERT OR IGNORE INTO method (name) VALUES ('HEAD');
+INSERT OR IGNORE INTO method (name) VALUES ('OPTIONS');

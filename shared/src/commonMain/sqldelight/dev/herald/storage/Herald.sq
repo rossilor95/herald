@@ -1,3 +1,4 @@
+-- Method lookup table
 CREATE TABLE IF NOT EXISTS method (
     name TEXT NOT NULL PRIMARY KEY
 );
@@ -10,5 +11,201 @@ INSERT OR IGNORE INTO method (name) VALUES ('PATCH');
 INSERT OR IGNORE INTO method (name) VALUES ('HEAD');
 INSERT OR IGNORE INTO method (name) VALUES ('OPTIONS');
 
+-- Collections
+CREATE TABLE IF NOT EXISTS collection (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+-- Folders
+CREATE TABLE IF NOT EXISTS folder (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    collection_id INTEGER NOT NULL REFERENCES collection(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    seq INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+-- Requests
+CREATE TABLE IF NOT EXISTS request (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    collection_id INTEGER NOT NULL REFERENCES collection(id) ON DELETE CASCADE,
+    folder_id INTEGER REFERENCES folder(id) ON DELETE SET NULL,
+    name TEXT NOT NULL,
+    method TEXT NOT NULL REFERENCES method(name),
+    url TEXT NOT NULL DEFAULT '',
+    headers TEXT NOT NULL DEFAULT '[]',
+    query_params TEXT NOT NULL DEFAULT '[]',
+    body_type TEXT,
+    body_content TEXT,
+    seq INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+-- Environments
+CREATE TABLE IF NOT EXISTS environment (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+-- Variables
+CREATE TABLE IF NOT EXISTS variable (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    environment_id INTEGER NOT NULL REFERENCES environment(id) ON DELETE CASCADE,
+    key TEXT NOT NULL,
+    value TEXT NOT NULL DEFAULT '',
+    enabled INTEGER NOT NULL DEFAULT 1
+);
+
+-- History entries
+CREATE TABLE IF NOT EXISTS history_entry (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    request_id INTEGER NOT NULL REFERENCES request(id) ON DELETE CASCADE,
+    method TEXT NOT NULL REFERENCES method(name),
+    resolved_url TEXT NOT NULL,
+    request_headers TEXT NOT NULL DEFAULT '[]',
+    request_body TEXT,
+    response_status INTEGER NOT NULL,
+    response_headers TEXT NOT NULL DEFAULT '[]',
+    response_body TEXT,
+    duration_ms INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+);
+
+-- ============ Method Queries ============
+
 selectAllMethods:
 SELECT name FROM method ORDER BY name;
+
+-- ============ Collection Queries ============
+
+selectAllCollections:
+SELECT * FROM collection ORDER BY name ASC;
+
+selectCollectionById:
+SELECT * FROM collection WHERE id = ?;
+
+insertCollection:
+INSERT INTO collection (name, created_at, updated_at) VALUES (?, ?, ?);
+
+lastInsertId:
+SELECT last_insert_rowid();
+
+updateCollection:
+UPDATE collection SET name = ?, updated_at = ? WHERE id = ?;
+
+deleteCollection:
+DELETE FROM collection WHERE id = ?;
+
+-- ============ Folder Queries ============
+
+selectFoldersByCollection:
+SELECT * FROM folder WHERE collection_id = ? ORDER BY seq ASC;
+
+selectFolderById:
+SELECT * FROM folder WHERE id = ?;
+
+insertFolder:
+INSERT INTO folder (collection_id, name, seq, created_at, updated_at) VALUES (?, ?, ?, ?, ?);
+
+updateFolder:
+UPDATE folder SET name = ?, seq = ?, updated_at = ? WHERE id = ?;
+
+deleteFolder:
+DELETE FROM folder WHERE id = ?;
+
+maxFolderSeq:
+SELECT COALESCE(MAX(seq), -1) FROM folder WHERE collection_id = ?;
+
+-- ============ Request Queries ============
+
+selectRequestsByCollection:
+SELECT * FROM request WHERE collection_id = ? AND folder_id IS NULL ORDER BY seq ASC;
+
+selectRequestsByFolder:
+SELECT * FROM request WHERE folder_id = ? ORDER BY seq ASC;
+
+selectRequestById:
+SELECT * FROM request WHERE id = ?;
+
+insertRequest:
+INSERT INTO request (collection_id, folder_id, name, method, url, headers, query_params, body_type, body_content, seq, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateRequest:
+UPDATE request
+SET collection_id = ?, folder_id = ?, name = ?, method = ?, url = ?, headers = ?, query_params = ?, body_type = ?, body_content = ?, seq = ?, updated_at = ?
+WHERE id = ?;
+
+deleteRequest:
+DELETE FROM request WHERE id = ?;
+
+maxRequestSeqInFolder:
+SELECT COALESCE(MAX(seq), -1) FROM request WHERE folder_id = ?;
+
+maxRequestSeqInCollectionRoot:
+SELECT COALESCE(MAX(seq), -1) FROM request WHERE collection_id = ? AND folder_id IS NULL;
+
+-- ============ Environment Queries ============
+
+selectAllEnvironments:
+SELECT * FROM environment ORDER BY name ASC;
+
+selectEnvironmentById:
+SELECT * FROM environment WHERE id = ?;
+
+insertEnvironment:
+INSERT INTO environment (name, created_at, updated_at) VALUES (?, ?, ?);
+
+updateEnvironment:
+UPDATE environment SET name = ?, updated_at = ? WHERE id = ?;
+
+deleteEnvironment:
+DELETE FROM environment WHERE id = ?;
+
+-- ============ Variable Queries ============
+
+selectVariablesByEnvironment:
+SELECT * FROM variable WHERE environment_id = ?;
+
+selectEnabledVariablesByEnvironment:
+SELECT * FROM variable WHERE environment_id = ? AND enabled = 1;
+
+insertVariable:
+INSERT INTO variable (environment_id, key, value, enabled) VALUES (?, ?, ?, ?);
+
+updateVariable:
+UPDATE variable SET key = ?, value = ?, enabled = ?, environment_id = ? WHERE id = ?;
+
+deleteVariable:
+DELETE FROM variable WHERE id = ?;
+
+-- ============ History Queries ============
+
+selectHistoryByRequest:
+SELECT * FROM history_entry WHERE request_id = ? ORDER BY created_at DESC;
+
+selectAllHistory:
+SELECT * FROM history_entry ORDER BY created_at DESC LIMIT ?;
+
+selectHistoryById:
+SELECT * FROM history_entry WHERE id = ?;
+
+insertHistoryEntry:
+INSERT INTO history_entry (request_id, method, resolved_url, request_headers, request_body, response_status, response_headers, response_body, duration_ms, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+pruneHistory:
+DELETE FROM history_entry WHERE id NOT IN (SELECT id FROM history_entry ORDER BY created_at DESC LIMIT ?);
+
+countHistory:
+SELECT COUNT(*) FROM history_entry;
+
+deleteHistoryById:
+DELETE FROM history_entry WHERE id = ?;

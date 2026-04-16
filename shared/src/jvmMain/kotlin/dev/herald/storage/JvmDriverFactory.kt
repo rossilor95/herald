@@ -19,6 +19,12 @@ actual class DriverFactory(private val dbPath: String? = null) {
             properties = Properties(),
             schema = HeraldDatabase.Schema
         )
+        driver.execute(
+            identifier = null,
+            sql = "PRAGMA foreign_keys = ON",
+            parameters = 0,
+            binders = null,
+        ).value
         return driver
     }
 }
